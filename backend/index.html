@@ -1,52 +1,4 @@
-require("dotenv").config();
-
-const fs = require("fs");
-const path = require("path");
-
-const { runTraceroute } = require("./traceroute");
-const { extractIPs } = require("./parser");
-const { geolocateIP } = require("./geo");
-
-async function main() {
-  const filePath = path.join(__dirname, "destination_list.txt");
-
-  const destinations = fs
-    .readFileSync(filePath, "utf-8")
-    .split("\n")
-    .map(d => d.trim())
-    .filter(Boolean);
-
-  const results = [];
-
-  for (const destination of destinations) {
-    console.log(`Tracing ${destination}...`);
-
-    const tracerouteOutput = await runTraceroute(destination);
-    const ips = extractIPs(tracerouteOutput);
-
-    const route = [];
-
-    for (const ip of ips) {
-      const location = await geolocateIP(ip);
-      if (location) {
-        route.push({
-          ip: location.ip,
-          lat: location.latitude,
-          lon: location.longitude,
-          country: location.country
-        });
-      }
-    }
-
-    results.push({ destination, route });
-  }
-
-  generateHTML(results);
-  console.log("index.html generated");
-}
-
-function generateHTML(data) {
-  const html = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
@@ -97,7 +49,7 @@ function generateHTML(data) {
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const data = ${JSON.stringify(data)};
+    const data = [{"destination":"openai.com","route":[{"ip":"172.64.154.211","lat":37.7621,"lon":-122.3971,"country":"US"},{"ip":"103.97.93.65","lat":15.5915,"lon":73.809,"country":"IN"},{"ip":"162.158.226.69","lat":19.0728,"lon":72.8826,"country":"IN"}]},{"destination":"google.com","route":[{"ip":"142.250.183.78","lat":19.0728,"lon":72.8826,"country":"IN"},{"ip":"103.97.93.65","lat":15.5915,"lon":73.809,"country":"IN"},{"ip":"192.178.86.202","lat":19.0728,"lon":72.8826,"country":"IN"},{"ip":"172.253.177.30","lat":19.0728,"lon":72.8826,"country":"IN"}]},{"destination":"artcenter.edu","route":[{"ip":"204.17.178.28","lat":34.0522,"lon":-118.2437,"country":"US"},{"ip":"103.97.93.65","lat":15.5915,"lon":73.809,"country":"IN"},{"ip":"203.199.35.161","lat":19.0728,"lon":72.8826,"country":"IN"},{"ip":"180.149.48.23","lat":28.6519,"lon":77.2315,"country":"IN"},{"ip":"63.243.180.3","lat":1.2897,"lon":103.8501,"country":"SG"},{"ip":"129.250.66.9","lat":1.2897,"lon":103.8501,"country":"SG"},{"ip":"130.94.195.186","lat":34.0522,"lon":-118.2437,"country":"US"},{"ip":"130.152.184.194","lat":34.0522,"lon":-118.2437,"country":"US"},{"ip":"206.117.149.253","lat":34.0522,"lon":-118.2437,"country":"US"}]}];
     const colors = ["red", "blue", "green", "orange", "purple", "brown", "black"];
 
     const map = L.map("map").setView([20, 0], 2);
@@ -134,9 +86,9 @@ function generateHTML(data) {
         })
         .addTo(map)
         .bindPopup(
-          \`<b>IP:</b> \${p.ip}<br>
-           <b>Country:</b> \${p.country}<br>
-           <b>Destination:</b> \${item.destination}\`
+          `<b>IP:</b> ${p.ip}<br>
+           <b>Country:</b> ${p.country}<br>
+           <b>Destination:</b> ${item.destination}`
         );
       });
 
@@ -146,10 +98,4 @@ function generateHTML(data) {
     });
   </script>
 </body>
-</html>`;
-
-  fs.writeFileSync(path.join(__dirname, "index.html"), html);
-}
-
-
-main().catch(console.error);
+</html>

@@ -13,12 +13,12 @@ async function geolocateIP(ip) {
     const [lat, lon] = data.loc.split(",");
 
     return {
-      ip: ip,
+      ip,
       latitude: parseFloat(lat),
       longitude: parseFloat(lon),
       country: data.country
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }

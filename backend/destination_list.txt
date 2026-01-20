@@ -1,2 +1,3 @@
+openai.com
 google.com
-leetcode.com
+artcenter.edu
